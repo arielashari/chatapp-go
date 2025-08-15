@@ -1,10 +1,11 @@
 package users
 
 import (
-	"github.com/gin-gonic/gin"
 	"go-boilerplate/modules/core"
 	"go-boilerplate/modules/users/dto"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func routes(rg *gin.RouterGroup) {

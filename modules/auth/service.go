@@ -4,29 +4,39 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"errors"
-	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"go-boilerplate/config"
 	"go-boilerplate/modules/auth/dto"
 	"go-boilerplate/modules/core"
+	userService "go-boilerplate/modules/users"
+	userDto "go-boilerplate/modules/users/dto"
 	"go-boilerplate/modules/users/models"
-	"golang.org/x/crypto/pbkdf2"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 func Register(registerDTO dto.RegisterDTO) (error, models.User) {
 	var user models.User
 
 	user.Name = registerDTO.Name
-	user.Email = registerDTO.Email
+	user.Username = registerDTO.Username
 	user.Salt = uuid.New().String()
 
 	passwordHashed := pbkdf2.Key([]byte(registerDTO.Password), []byte(user.Salt), 4096, 100, sha512.New)
 
 	user.Password = hex.EncodeToString(passwordHashed)
 
-	if result := core.DB.Create(&user); result.Error != nil {
-		return result.Error, user
+	userDTO := userDto.UserDTO{
+		Name:     user.Name,
+		Username: user.Username,
+		Password: registerDTO.Password,
+	}
+
+	err, user := userService.CreateUser(userDTO)
+	if err != nil {
+		return err, user
 	}
 
 	return nil, user
@@ -35,7 +45,7 @@ func Register(registerDTO dto.RegisterDTO) (error, models.User) {
 func Login(loginDTO dto.LoginDTO) (err error, loginResponseDTO dto.LoginResponseDTO) {
 	var user models.User
 
-	if result := core.DB.Where("email = ?", loginDTO.Email).Take(&user); result.Error != nil {
+	if result := core.DB.Where("username = ?", loginDTO.Username).Take(&user); result.Error != nil {
 		err = result.Error
 		return
 	}
