@@ -1,6 +1,8 @@
 package models
 
-import "go-boilerplate/modules/core"
+import (
+	"go-boilerplate/modules/core"
+)
 
 type User struct {
 	core.Base `gorm:"embedded"`

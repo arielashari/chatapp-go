@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"go-boilerplate/config"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -36,10 +37,23 @@ func AutoMigrate(from string, dst ...interface{}) {
 		return
 	}
 
-	err := DB.AutoMigrate(dst...)
-
+	// create enum if not exists
+	err := DB.Exec(`
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'friend_request_status') THEN
+                CREATE TYPE friend_request_status AS ENUM ('pending', 'accepted', 'rejected');
+            END IF;
+        END$$;
+    `).Error
 	if err != nil {
-		panic("[" + from + "] failed to migrate database")
+		panic("[" + from + "] failed to create enum: " + err.Error())
+	}
+
+	// migrate schema
+	err = DB.AutoMigrate(dst...)
+	if err != nil {
+		panic("[" + from + "] failed to migrate database: " + err.Error())
 	}
 
 	fmt.Println("[" + from + "] database migrated")

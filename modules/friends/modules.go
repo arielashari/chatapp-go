@@ -14,4 +14,5 @@ func Init(rg *gin.RouterGroup) {
 
 func initModel() {
 	core.AutoMigrate("friends", &models.Friends{})
+	core.AutoMigrate("friend_requests", &models.FriendRequests{})
 }
